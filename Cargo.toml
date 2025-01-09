@@ -1,0 +1,16 @@
+[package]
+name = "untitled1"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+reqwest = { version = "0.11", features = ["json"] }  # For HTTP requests
+serde = { version = "1.0", features = ["derive"] }   # For JSON serialization/deserialization
+tokio = { version = "1", features = ["full"] }       # Async runtime
+lru = "0.10"                                         # For cache support
+chrono = "0.4"                                       # For date handling
+dotenv = "0.15"                                      # For loading environment variables (e.g., GitHub Token)
+octocrab = "0.42.1"
+serde_json = "1.0.134"
+thiserror = "1.0.69"
+anyhow = "1.0.95"
