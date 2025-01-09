@@ -33,16 +33,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match check_rate_limit(&client).await {
         Ok(limit) => {
-            println!(
-                "Rate limit status: {} requests remaining (out of {}). Limit resets at {}.",
-                limit.rate.remaining,
-                limit.rate.limit,
-                chrono::NaiveDateTime::from_timestamp(limit.rate.reset as i64, 0)
-                    .format("%Y-%m-%d %H:%M:%S")
-            );
-        }
+            println!("{} requests remaining", limit.rate.remaining);
+        },
         Err(err) => {
-            eprintln!("Failed to fetch rate limit: {}", err);
+            println!("Rate limit error: {}", err.to_string());
+            std::process::exit(1);
         }
     }
 
@@ -51,10 +46,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .min_stars("5000")
         .to_query_string();
 
-    println!("{}", query);
-
     // Send the search request
-    match search_repositories(&client, &query, Some(&1)).await {
+    match search_repositories(&client, &query, Some(&10)).await {
         Ok(response) => {
             println!("Found {} repositories:", response.total_count);
             for repo in response.items {

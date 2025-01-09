@@ -30,5 +30,15 @@ pub async fn check_rate_limit(client: &Client) -> Result<RateLimit, anyhow::Erro
         .json::<RateLimit>() // Deserialize JSON into `RateLimit`
         .await?;
 
+    if response.rate.remaining < 1 {
+        return Err(anyhow!(
+            "{} requests remaining (out of {}). Limit resets at {}.",
+                response.rate.remaining,
+                response.rate.limit,
+                chrono::NaiveDateTime::from_timestamp(response.rate.reset as i64, 0)
+                    .format("%Y-%m-%d %H:%M:%S")
+        ));
+    }
+
     Ok(response)
 }
