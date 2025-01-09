@@ -13,8 +13,16 @@ pub async fn search_repositories(client: &Client, query: &str, per_page: Option<
     let status_code = response.status();
     let raw_body = response.text().await?;
 
-    if status_code.is_client_error() {
-        return Err(anyhow!("Unexpected GitHub API response: {}", raw_body));
+    if status_code.eq(&422) {
+        return Err(anyhow!("Invalid query syntax: {}", raw_body));
+    } else if status_code.eq(&401) {
+        return Err(anyhow!("Invalid token: {}", raw_body));
+    } else if status_code.eq(&403) {
+        return Err(anyhow!("Permission denied: {}", raw_body));
+    } else if status_code.is_client_error() {
+        return Err(anyhow!("Unexpected client error: {}", raw_body));
+    } else if status_code.is_server_error() {
+        return Err(anyhow!("Unexpected server error: {}", raw_body));
     }
 
     let result: SearchResponse = serde_json::from_str(&raw_body).unwrap();
