@@ -1,12 +1,30 @@
 use anyhow::anyhow;
 use reqwest::Client;
+use crate::cache::Cache;
 use crate::models::{RateLimit, SearchResponse};
 
-pub async fn search_repositories(client: &Client, query: &str, per_page: Option<&u32>) -> Result<SearchResponse, anyhow::Error> {
+pub async fn search_repositories(
+    client: &Client,
+    cache: &Cache,            // Add cache as a parameter
+    query: &str,
+    per_page: Option<&u32>
+) -> Result<SearchResponse, anyhow::Error> {
+
+    let pp = per_page.unwrap_or(&10);
+    let cache_key = format!("{}-{}", query, pp);
+
+    // Check if the query result is in the cache
+    if let Some(cached_response) = cache.get(&cache_key) {
+        println!("Cache hit for query: {}", cache_key);
+        return Ok(cached_response); // Return the cached response
+    }
+
+    println!("Cache miss for query: {}", query);
+
     let response = client
         .get("https://api.github.com/search/repositories")
         .query(&[("q", query)]) // Add the query as a GET parameter
-        .query(&[("per_page", per_page.unwrap_or(&10))]) // Add per_page as a GET parameter
+        .query(&[("per_page", pp)]) // Add per_page as a GET parameter
         .send()
         .await?;
 
@@ -26,6 +44,10 @@ pub async fn search_repositories(client: &Client, query: &str, per_page: Option<
     }
 
     let result: SearchResponse = serde_json::from_str(&raw_body).unwrap();
+
+    // Insert the new result into the cache
+    cache.insert(&cache_key, result.clone());
+
     Ok(result)
 }
 

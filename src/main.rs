@@ -2,6 +2,7 @@ mod models;
 mod search_query;
 mod api_client;
 mod errors;
+mod cache;
 
 use dotenv::dotenv;
 use std::env;
@@ -31,6 +32,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .build()?;
 
+    let cache = cache::Cache::new(); // Initialize a new in-memory cache
+
     match check_rate_limit(&client).await {
         Ok(limit) => {
             println!("{} requests remaining", limit.rate.remaining);
@@ -47,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .to_query_string();
 
     // Send the search request
-    match search_repositories(&client, &query, Some(&10)).await {
+    match search_repositories(&client, &cache, &query, Some(&1)).await {
         Ok(response) => {
             println!("Found {} repositories:", response.total_count);
             for repo in response.items {
@@ -57,6 +60,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(err) => {
             eprintln!("Error while searching: {}", err);
         },
+    }
+
+    // Re-use cache for the same query
+    println!("Re-running the same query to check caching...");
+
+    match search_repositories(&client, &cache, &query, Some(&1)).await {
+        Ok(response) => {
+            println!("Cache response: Found {} repositories:", response.total_count);
+            for repo in response.items {
+                println!("- {} ({} stars)", repo.full_name, repo.stargazers_count);
+            }
+        }
+        Err(err) => {
+            eprintln!("Error while searching: {}", err);
+        }
     }
 
     Ok(())

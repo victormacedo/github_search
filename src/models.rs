@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Repo {
     pub full_name: String,         // e.g., "rust-lang/rust"
     pub description: Option<String>, // Optional: Not all repos have a description
@@ -9,7 +9,7 @@ pub struct Repo {
     pub html_url: String,          // Link to repo
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct SearchResponse {
     pub total_count: u32,          // Total number of matching repositories
     pub incomplete_results: bool, // If not all results are complete
