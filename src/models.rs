@@ -1,5 +1,30 @@
 use serde::Deserialize;
 
+#[derive(serde::Deserialize, Debug, Clone)]
+pub struct CodeSearchFile {
+    pub name: String,
+    pub path: String,
+    pub sha: String,
+    pub url: String,
+    pub git_url: String,
+    pub html_url: String,
+    pub repository: Repository, // Related repository details
+}
+
+#[derive(serde::Deserialize, Debug, Clone)]
+pub struct CodeSearchResponse {
+    pub total_count: u32,
+    pub incomplete_results: bool,
+    pub items: Vec<CodeSearchFile>, // A list of matching files
+}
+
+#[derive(serde::Deserialize, Debug, Clone)]
+pub struct Repository {
+    pub name: String,
+    pub full_name: String,
+    pub html_url: String,
+}
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct Repo {
     pub full_name: String,         // e.g., "rust-lang/rust"
